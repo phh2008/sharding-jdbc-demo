@@ -1,0 +1,48 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+spring:
+  application:
+    name: demo
+  shardingsphere:
+    datasource:
+      names: master0,slave0
+      master0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/demo?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true
+        username: root
+        password: root
+      slave0:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/demo?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=UTC&allowPublicKeyRetrieval=true
+        username: root
+        password: root
+    sharding:
+      tables:
+        t_order:
+          actual-data-nodes: ds$->{0..1}.t_order$->{0..1}
+          table-strategy:
+            inline:
+              sharding-column: order_id
+              algorithm-expression: t_order$->{order_id % 2}
+        key-generator:
+          column: order_id
+          type: SNOWFLAKE
+      #binding-tables: t_order
+      #broadcast-tables: t_config
+      master-slave-rules:
+        ds0:
+          master-data-source-name: master0
+          slave-data-source-names: slave0
+        ds1:
+          master-data-source-name: master0
+          slave-data-source-names: slave0
+    props:
+      sql:
+        show: true
+mybatis:
+  mapper-locations: classpath:mapper/**/*Mapper.xml
+  config-location: classpath:mybatis-config.xml
